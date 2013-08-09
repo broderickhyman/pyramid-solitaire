@@ -1,0 +1,479 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Canvas Test</title>
+<style type="text/css">
+canvas {
+    -webkit-tap-highlight-color: transparent;
+}
+</style>
+</head>
+<body>
+
+<div>
+<canvas id="canvas" width="800" height="600" style="position:absolute;left:100px;">
+This text is displayed if your browser does not support HTML5 Canvas.
+</canvas>
+</div>
+
+<script type="text/javascript">
+var canvas;
+var ctx;
+var dx = 1;
+var dy = 1;
+var x = 150;
+var y = 100;
+var WIDTH = 800;
+var HEIGHT = 600;
+var cards = [];
+var lines = [];
+var discard = [];
+var drawpile = [];
+var mousePos;
+var message;
+var numSelect = 0;
+var index1 = -1;
+var index2 = -1;
+
+function rect(x,y,w,h) {
+ctx.beginPath();
+ctx.rect(x,y,w,h);
+ctx.closePath();
+ctx.fill();
+ctx.stroke();
+}
+
+function card(){
+this.x = 0;
+this.y = 0;
+this.w = 70;
+this.h = 98;
+this.num = 1;
+this.row = 0;
+this.col = 0;
+this.clicked = false;
+this.clickable = false;
+this.print = true;
+}
+
+function addCard(x,y,num,row,col){
+var aCard = new card();
+aCard.x = x;
+aCard.y = y;
+aCard.row = row;
+aCard.col = col;
+//aCard.w = w;
+//aCard.h = h;
+aCard.num = num;//Math.floor(Math.random()*5)+1;
+if(row == 7){
+aCard.clickable = true;
+}
+//aCard.clicked = false;
+//aCard.print = false;
+cards.push(aCard);
+//invalidate();
+}
+
+function addDraw(x,y,num){
+var aCard = new card();
+aCard.x = x;
+aCard.y = y;
+//aCard.row = row;
+//aCard.col = col;
+//aCard.w = w;
+//aCard.h = h;
+aCard.num = num;//Math.floor(Math.random()*5)+1;
+aCard.clickable = false;
+//aCard.clicked = false;
+//aCard.print = false;
+drawpile.push(aCard);
+//invalidate();
+}
+
+function clear() {
+ctx.clearRect(0, 0, WIDTH, HEIGHT);
+}
+
+function dealCards(){
+	var z = 1;
+	while(z < 28){
+		for(var i=0; i < 7; i++){
+			for(var j=0; j < i+1; j++){
+				addCard(365-(i*45)+(j*90),50+i*40,drawpile[drawpile.length-1].num,i+1,j+1);
+				drawpile.splice(drawpile.length-1,1);
+				z+=1;
+			}
+		}
+	}
+}
+
+function shuffle(list){
+	var i,j,t;
+	for(i=1; i < list.length; i++){
+		j = Math.floor(Math.random()*(1+i));
+		if(j!=i){
+			t = list[i];
+			list[i] = list[j];
+			list[j] = t;
+		}
+	}
+}
+
+function init() {
+canvas = document.getElementById("canvas");
+ctx = canvas.getContext("2d");
+/*addCard(400-70/2,50,1);//365
+addCard(400-70-10,100,1);//320
+addCard(400+10,100,1);//410
+addCard(275,150,1);
+addCard(365,150,1);
+addCard(455,150,1);*/
+for(var i=1; i < 5; i++){
+	for(var j=1; j < 14; j++){
+		addDraw(30,40,j);
+	}
+}
+//for(var i=0; i < 7; i++){
+//	for(var j=0; j < i+1; j++){
+//		addCard(365-(i*45)+(j*90),50+i*40,1,i+1,j+1);
+//	}
+//}
+shuffle(drawpile);
+dealCards();
+drawpile[drawpile.length-1].clickable = true;
+
+return setInterval(draw, 100);
+}
+
+
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+    	x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
+}
+
+function draw() {
+clear();
+ctx.font="30px Arial";
+ctx.fillStyle = "white";
+ctx.strokeStyle = "black";
+ctx.lineWidth = 1;
+rect(0,0,WIDTH,HEIGHT);
+
+ctx.moveTo(WIDTH/2,0);
+ctx.lineTo(WIDTH/2,HEIGHT);
+ctx.moveTo(0,HEIGHT/2);
+ctx.lineTo(WIDTH,HEIGHT/2);
+ctx.stroke();
+
+ctx.lineWidth = 3;
+l = cards.length;
+for (var i = 0; i < l; i++) {
+	if(cards[i].print){
+	ctx.fillStyle = "lightgray";
+	ctx.fillRect(cards[i].x, cards[i].y, cards[i].w, cards[i].h);
+	if(cards[i].clicked == true){
+		ctx.strokeStyle = "red";
+	}
+	else{
+		ctx.strokeStyle = "black";
+	}
+	ctx.strokeRect(cards[i].x, cards[i].y, cards[i].w, cards[i].h);
+	ctx.fillStyle = "black";
+	ctx.fillText(cards[i].num,cards[i].x+5,cards[i].y+30);
+	//ctx.fillText(cards[i].num,cards[i].x+50,cards[i].y+90);
+	}
+}
+l = discard.length;
+if(l == 0){
+	ctx.strokeStyle = "black";
+	ctx.strokeRect(700,40,70,98);
+}
+for (var i = 0; i < l; i++) {
+	ctx.fillStyle = "lightgray";
+	ctx.fillRect(700,40,70,98);
+	ctx.strokeStyle = "black";
+	ctx.strokeRect(700,40,70,98);
+	ctx.fillStyle = "black";
+	ctx.fillText(discard[l-1].num,705,70);
+}
+l = drawpile.length;
+if(l == 0){
+	ctx.strokeStyle = "black";
+	ctx.strokeRect(30,40,70,98);
+}
+for (var i = 0; i < l; i++) {
+	ctx.fillStyle = "lightgray";
+	ctx.fillRect(30,40,70,98);
+	if(drawpile[l-1].clicked == true){
+		ctx.strokeStyle = "red";
+	}
+	else{
+		ctx.strokeStyle = "black";
+	}
+	//ctx.strokeRect(30,40,70,98);
+	ctx.fillStyle = "black";
+	ctx.fillText(drawpile[l-1].num,45,70);
+}
+ctx.strokeRect(30,40,70,98);
+ctx.strokeStyle = "black";
+ctx.strokeRect(120,40,70,98);
+
+ctx.fillStyle = "black";
+ctx.fillText("Draw",30,30);
+ctx.fillText("Discard",680,30);
+}
+
+
+
+init();
+//addCard(50,50,50,100,1);
+canvas.addEventListener('dblclick',function dblclick(){
+	if(drawpile[drawpile.length-1].clicked){
+		numSelect -= 1;
+	}
+	if(drawpile.length > 0){
+	discard.push(drawpile[drawpile.length-1]);
+	if(drawpile.length == 1){
+	drawpile = [];
+	}
+	else{
+	drawpile.splice(drawpile.length-1,1);
+	drawpile[drawpile.length-1].clickable = true;
+	}
+	}
+},false);
+
+canvas.addEventListener('click', function click(evt){
+	mousePos = getMousePos(canvas, evt);
+	l = cards.length;
+	r = drawpile.length;
+	if(r > 0 && mousePos.x > drawpile[r-1].x && mousePos.x < (drawpile[r-1].x+cards[r-1].w)){
+		if(mousePos.y > drawpile[r-1].y && mousePos.y < (drawpile[r-1].y+cards[r-1].h)){
+		if(drawpile[r-1].clickable == true){
+			if(drawpile[r-1].clicked){
+				drawpile[r-1].clicked = false;
+				numSelect -= 1;
+			}
+			else{
+				if(numSelect == 0){
+					drawpile[r-1].clicked = true;
+					numSelect += 1;
+					if(drawpile[r-1].num == 13){
+						discard.push(drawpile[r-1]);
+						if(drawpile.length == 1){
+							drawpile = [];
+						}
+						else{
+						drawpile.splice(drawpile.length-1,1);
+						drawpile[drawpile.length-1].clickable = true;
+						}
+						numSelect = 0;
+					}
+				}
+				else{
+					if(numSelect == 1){
+						drawpile[drawpile.length-1].clicked = true;
+						numSelect += 1;
+						for (var i = 0; i < l; i++) {
+							if(cards[i].clicked && drawpile[drawpile.length-1].num + cards[i].num == 13){
+								cards[i].print = false;
+								cards[i].clicked = false;
+								cards[i].clickable = false;
+								discard.push(cards[i]);
+								//discard.push(drawpile[drawpile.length-1]);
+								if(drawpile.length == 1){
+									drawpile = [];
+								}
+								else{
+									drawpile.splice(drawpile.length-1,1);
+									drawpile[drawpile.length-1].clickable = true;
+								}
+								numSelect = 0;
+								var row = cards[i].row;
+								var col = cards[i].col;
+								for	(var c = 0; c < cards.length; c++){
+									if(cards[c].col == col-1 && cards[c].row == row){
+										if(!cards[c].print){
+											for	(var n = 0; n < cards.length; n++){
+												if(cards[n].row == row-1 && cards[n].col == col-1){
+													cards[n].clickable = true;
+												}
+											}
+										}
+									}
+									if(cards[c].col == col+1 && cards[c].row == row){
+										if(!cards[c].print){
+											for	(var n = 0; n < cards.length; n++){
+												if(cards[n].row == row-1 && cards[n].col == col){
+													cards[n].clickable = true;
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		}
+	}
+	for (var i = 0; i < l; i++) {
+		if(mousePos.x > cards[i].x && mousePos.x < (cards[i].x+cards[i].w)){
+			if(mousePos.y > cards[i].y && mousePos.y < (cards[i].y+cards[i].h)){
+				if(cards[i].clickable == true){
+					if(cards[i].clicked){
+						cards[i].clicked = false;
+						numSelect -= 1;
+					}
+					else{
+						if(numSelect == 0){
+							cards[i].clicked = true;
+							numSelect += 1;
+							if(cards[i].num == 13){
+								cards[i].print = false;
+								cards[i].clicked = false;
+								cards[i].clickable = false;
+								discard.push(cards[i]);
+								numSelect = 0;
+								var row = cards[i].row;
+								var col = cards[i].col;
+								for	(var c = 0; c < cards.length; c++){
+									if(cards[c].col == col-1 && cards[c].row == row){
+										if(!cards[c].print){
+											for	(var n = 0; n < cards.length; n++){
+												if(cards[n].row == row-1 && cards[n].col == col-1){
+													cards[n].clickable = true;
+												}
+											}
+										}
+									}
+									if(cards[c].col == col+1 && cards[c].row == row){
+										if(!cards[c].print){
+											for	(var n = 0; n < cards.length; n++){
+												if(cards[n].row == row-1 && cards[n].col == col){
+													cards[n].clickable = true;
+												}
+											}
+										}
+									}
+								}
+							}
+//							index1 = i;
+						}
+						else{
+							if(numSelect == 1){
+								cards[i].clicked = true;
+								numSelect += 1;
+								for (var j = 0; j < l; j++) {
+									if(j != i && cards[j].clicked == true && cards[i].num+cards[j].num == 13){
+										cards[i].print = false;
+										cards[i].clicked = false;
+										cards[i].clickable = false;
+										cards[j].print = false;
+										cards[j].clicked = false;
+										cards[j].clickable = false;
+										discard.push(cards[i]);
+										//discard.push(cards[j]);
+										numSelect = 0;
+										var row = cards[i].row;
+										var col = cards[i].col;
+										for	(var c = 0; c < cards.length; c++){
+											if(cards[c].col == col-1 && cards[c].row == row){
+												if(!cards[c].print){
+													for	(var n = 0; n < cards.length; n++){
+														if(cards[n].row == row-1 && cards[n].col == col-1){
+															cards[n].clickable = true;
+														}
+													}
+												}
+											}
+											if(cards[c].col == col+1 && cards[c].row == row){
+												if(!cards[c].print){
+													for	(var n = 0; n < cards.length; n++){
+														if(cards[n].row == row-1 && cards[n].col == col){
+															cards[n].clickable = true;
+														}
+													}
+												}
+											}
+										}
+										var row = cards[j].row;
+										var col = cards[j].col;
+										for	(var c = 0; c < cards.length; c++){
+											if(cards[c].col == col-1 && cards[c].row == row){
+												if(!cards[c].print){
+													for	(var n = 0; n < cards.length; n++){
+														if(cards[n].row == row-1 && cards[n].col == col-1){
+															cards[n].clickable = true;
+														}
+													}
+												}
+											}
+											if(cards[c].col == col+1 && cards[c].row == row){
+												if(!cards[c].print){
+													for	(var n = 0; n < cards.length; n++){
+														if(cards[n].row == row-1 && cards[n].col == col){
+															cards[n].clickable = true;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+								if(drawpile[drawpile.length-1].clicked && drawpile.length > 0){
+									if(drawpile[drawpile.length-1].num + cards[i].num == 13){
+										cards[i].print = false;
+										cards[i].clicked = false;
+										cards[i].clickable = false;
+										discard.push(cards[i]);
+										if(drawpile.length == 1){
+											drawpile = [];
+										}
+										else{
+											drawpile.splice(drawpile.length-1,1);
+											drawpile[drawpile.length-1].clickable = true;
+										}
+										numSelect = 0;
+										var row = cards[i].row;
+										var col = cards[i].col;
+										for	(var c = 0; c < cards.length; c++){
+											if(cards[c].col == col-1 && cards[c].row == row){
+												if(!cards[c].print){
+													for	(var n = 0; n < cards.length; n++){
+														if(cards[n].row == row-1 && cards[n].col == col-1){
+															cards[n].clickable = true;
+														}
+													}
+												}
+											}
+											if(cards[c].col == col+1 && cards[c].row == row){
+												if(!cards[c].print){
+													for	(var n = 0; n < cards.length; n++){
+														if(cards[n].row == row-1 && cards[n].col == col){
+															cards[n].clickable = true;
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}, false);
+</script>
+
+</body>
+</html>
